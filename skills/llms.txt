@@ -1,0 +1,29 @@
+# TTS-Chef Skills — Index for AI Agents
+
+Use this file to discover which skill to load. Each skill lives in a directory of the same name under skills/ and contains SKILL.md.
+
+## Skills
+
+tts-chef-core
+  Universal TTS text preprocessing pipeline: text cleaning, Markdown/HTML removal, URL/email/path conversion, operator/symbol replacement, pipeline orchestration. Use when the user asks to preprocess text for TTS, clean text for speech synthesis, or prepare text for voice output.
+  Triggers: TTS preprocessing, text cleaning, speech synthesis prep, voice synthesis, 文字清洗, 语音合成准备, TTS预处理.
+
+tts-chef-zh
+  Chinese TTS preprocessing: polyphone replacement (~200 words), number-to-Chinese conversion, Chinese punctuation normalization, sentence breaking, tech abbreviation expansion. Use when preprocessing Chinese text for TTS.
+  Triggers: Chinese TTS, polyphone, Chinese numbers, 中文朗读, 多音字, 中文数字, 中文TTS, 中文语音合成.
+
+tts-chef-en
+  English TTS preprocessing: abbreviation expansion, number-to-English conversion, symbol reading, punctuation normalization for TTS. Use when preprocessing English text for TTS.
+  Triggers: English TTS, English abbreviation, English reading, text-to-speech English, TTS English.
+
+tts-chef-ja
+  Japanese TTS preprocessing: kanji reading guidelines, number-to-Japanese conversion, particle disambiguation (は/へ), Japanese punctuation normalization. Use when preprocessing Japanese text for TTS.
+  Triggers: 日本語 TTS, Japanese reading, 日文朗读, 日本語音声合成, TTS 日本語.
+
+tts-chef-auto
+  Auto language detection and dispatch: detects Chinese/English/Japanese text, applies the corresponding language skill's rules. Use for mixed-language or unknown-language text.
+  Triggers: auto detect, mixed language, unknown language, 混合语言, 自动检测语言, mixed TTS.
+
+tts-chef-emotion
+  Optional emotion annotation for TTS: adds speaking-style tags like [兴奋], [悲伤], [耳语] to control TTS engine tone. Only use when the user explicitly requests emotion control.
+  Triggers: emotion tag, TTS emotion, speaking style, 情感标注, 语气控制, emotion annotation, TTS tone.
