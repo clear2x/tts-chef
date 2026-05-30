@@ -1,3 +1,7 @@
+[**中文文档**](README.zh-CN.md)
+
+---
+
 <div align="center">
 
 # 🎧 TTS-Chef
@@ -19,12 +23,12 @@ Teach your AI agent how to clean, normalize, and prepare text for speech synthes
 
 Before sending text to a TTS engine, the text needs preprocessing to sound natural:
 
-- **多音字替换** — Fix commonly mispronounced Chinese words (调试→条试)
-- **数字转换** — Convert numbers to spoken form (v2.0.1→版本二点零点一)
-- **缩写展开** — Spell out abbreviations (API→A P I)
-- **文本清洗** — Remove Markdown, HTML, URLs, code syntax
-- **情感标注** — Optional emotion tags for expressive speech ([兴奋] hello [/])
-- **多语言** — Support for Chinese, English, and Japanese
+- **Polyphone replacement** — Fix commonly mispronounced Chinese words (调试→条试)
+- **Number conversion** — Convert numbers to spoken form (v2.0.1→版本二点零点一)
+- **Abbreviation expansion** — Spell out abbreviations (API→A P I)
+- **Text cleaning** — Remove Markdown, HTML, URLs, code syntax
+- **Emotion annotation** — Optional emotion tags for expressive speech ([兴奋] hello [/])
+- **Multilingual** — Support for Chinese, English, and Japanese
 
 ## Installing
 
@@ -115,10 +119,11 @@ python scripts/tts_preprocess.py input.txt --rules custom_rules.json
 
 ```
 tts-chef/
-  README.md
-  CLAUDE.md              # Agent repo guidance (Claude Code)
-  AGENTS.md              # Agent repo guidance (generic agents)
-  GEMINI.md              # Agent repo guidance (Gemini CLI)
+  README.md                # English docs (this file)
+  README.zh-CN.md          # Chinese docs
+  CLAUDE.md                # Agent repo guidance (Claude Code)
+  AGENTS.md                # Agent repo guidance (generic agents)
+  GEMINI.md                # Agent repo guidance (Gemini CLI)
   LICENSE
   .github/
     copilot-instructions.md
@@ -126,15 +131,15 @@ tts-chef/
     tts-chef-logo.svg
     tts-chef-icon.svg
   scripts/
-    tts_preprocess.py    # Standalone Python tool
+    tts_preprocess.py      # Standalone Python tool
   skills/
-    llms.txt             # Skill index for agent discovery
-    tts-chef-core/       SKILL.md
-    tts-chef-zh/         SKILL.md
-    tts-chef-en/         SKILL.md
-    tts-chef-ja/         SKILL.md
-    tts-chef-auto/       SKILL.md
-    tts-chef-emotion/    SKILL.md
+    llms.txt               # Skill index for agent discovery
+    tts-chef-core/         SKILL.md
+    tts-chef-zh/           SKILL.md
+    tts-chef-en/           SKILL.md
+    tts-chef-ja/           SKILL.md
+    tts-chef-auto/         SKILL.md
+    tts-chef-emotion/      SKILL.md
   examples/
     chinese-sample.txt
     english-sample.txt
