@@ -1,0 +1,15 @@
+=== Original ===
+
+# 混合语言示例
+
+In 2024, 我们发布了新的API，支持REST和gRPC协议。
+The CPU usage 降低了50%，而throughput提升了200%。
+详细文档请参考 https://docs.example.com/guide。
+
+=== Processed (auto-detected: mixed, per-sentence dispatch) ===
+
+混合语言示例
+
+In twenty twenty-four, 我们发布了新的 A P I，支持 R E S T 和 g R P C 协议。
+The C P U usage 降低了百分之五十，而 throughput 提升了百分之两百。
+详细文档请参考 链接 docs.example.com。

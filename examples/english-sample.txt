@@ -1,0 +1,19 @@
+=== Original ===
+
+# API Integration Guide
+
+Our REST API supports HTTPS, OAuth 2.0, and JWT authentication.
+The SDK has been updated to v3.14.0 with 98.5% test coverage.
+Configure the ${API_KEY} environment variable in your .env file.
+Performance improved by 150% — CPU usage dropped from 85% to 42%.
+Check out https://docs.example.com/api/v2 for more details.
+
+=== Processed ===
+
+A P I Integration Guide
+
+Our R E S T A P I supports H T T P S, O Auth two point zero, and J W T authentication.
+The S D K has been updated to version three point one four point zero with ninety-eight point five percent test coverage.
+Configure the api key environment variable in your .env file.
+Performance improved by one hundred fifty percent — C P U usage dropped from eighty-five percent to forty-two percent.
+Check out 链接 docs.example.com for more details.
