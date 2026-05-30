@@ -1,0 +1,9 @@
+# TTS-Chef Copilot Instructions
+
+This repo contains TTS text preprocessing skills for AI agents. When editing or adding skills:
+
+- Each skill lives in `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description`, `license`)
+- The `name` field must match the directory name
+- Keep SKILL.md under ~500 lines; link to reference files for longer content
+- Update README.md when adding or modifying skills
+- The `scripts/tts_preprocess.py` is a standalone tool — do not import it as a library
