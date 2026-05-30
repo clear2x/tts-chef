@@ -33,24 +33,24 @@ Before sending text to a TTS engine, the text needs preprocessing to sound natur
 Works with Claude Code, Cursor, Copilot, Windsurf, Gemini CLI, and [40+ agents](https://github.com/vercel-labs/skills#supported-agents):
 
 ```bash
-npx skills add https://github.com/your-username/tts-chef
+npx skills add https://github.com/clear2x/tts-chef
 ```
 
 Target a specific agent:
 
 ```bash
-npx skills add https://github.com/your-username/tts-chef --agent cursor
+npx skills add https://github.com/clear2x/tts-chef --agent cursor
 ```
 
 ### Claude Code
 
 ```bash
-/plugin marketplace add your-username/tts-chef
+/plugin marketplace add clear2x/tts-chef
 ```
 
 ### Cursor
 
-**Settings → Rules → Add Rule → Remote Rule (GitHub)** and use `your-username/tts-chef`.
+**Settings → Rules → Add Rule → Remote Rule (GitHub)** and use `clear2x/tts-chef`.
 
 ### Manual
 
