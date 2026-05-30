@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" fill="none">
+  <rect x="2" y="2" width="56" height="56" rx="12" fill="#FF6B35"/>
+  <text x="30" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="bold" fill="white">🎧</text>
+  <text x="72" y="40" font-family="Arial,sans-serif" font-size="32" font-weight="bold" fill="#1a1a2e">TTS</text>
+  <text x="138" y="40" font-family="Arial,sans-serif" font-size="32" font-weight="bold" fill="#FF6B35">Chef</text>
+</svg>
