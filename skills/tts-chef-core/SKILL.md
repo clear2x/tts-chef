@@ -201,4 +201,5 @@ Remove Markdown formatting markers (after all content processing is done).
 - ❌ Run number conversion in this skill — delegate to language-specific skills (tts-chef-zh, tts-chef-en, tts-chef-ja)
 - ❌ Run abbreviation expansion in this skill — delegate to language-specific skills
 - ❌ Add emotion tags — that's the optional tts-chef-emotion skill
+- ❌ Convert English words to Chinese phonetic equivalents (e.g. GitHub→吉特哈布) — leave English words as-is and let the TTS engine handle them
 - ❌ Modify the original text file — always output to a new file or string

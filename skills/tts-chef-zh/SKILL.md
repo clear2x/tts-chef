@@ -445,3 +445,7 @@ Full list contains ~100 abbreviations. See `scripts/tts_preprocess.py` for the c
 - Apply polyphone replacement **after** all other text transformations
 - For mixed Chinese/English text, apply Chinese rules to Chinese segments only
 - Different TTS engines may need different polyphone tables — the user can provide a custom rules JSON file
+
+## Do Not
+
+- ❌ Convert English words to Chinese phonetic equivalents (e.g. GitHub→吉特哈布, Python→派森). Always leave English words as-is — the TTS engine is responsible for pronouncing them.
