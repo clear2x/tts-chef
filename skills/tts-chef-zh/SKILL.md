@@ -441,6 +441,7 @@ Full list contains ~100 abbreviations. See `scripts/tts_preprocess.py` for the c
 
 ## Agent Guidelines
 
+- **MUST invoke `scripts/tts_preprocess.py`** to perform preprocessing. Do NOT apply these rules manually — the script implements them all.
 - Run **tts-chef-core** pipeline first, then apply this skill
 - Apply polyphone replacement **after** all other text transformations
 - For mixed Chinese/English text, apply Chinese rules to Chinese segments only

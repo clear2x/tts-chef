@@ -82,6 +82,10 @@ The `[/]` tag resets to the default (neutral) voice.
 
 ## Agent Guidelines
 
+### Preprocessing Prerequisite
+
+- **MUST run `python scripts/tts_preprocess.py`** on the text BEFORE adding emotion tags. Emotion annotation applies to already-preprocessed text.
+
 ### When to Add Emotion Tags
 
 - **Only when the user asks** for emotion/style control

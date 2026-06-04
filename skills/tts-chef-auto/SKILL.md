@@ -108,11 +108,11 @@ else:
 
 ## Complete Auto Pipeline
 
+**MUST invoke `scripts/tts_preprocess.py`** to perform all preprocessing. The script handles language detection and dispatch automatically.
+
 ```
 Input text
-  → tts-chef-core (universal: URLs, emails, code, etc.)
-  → detect language
-  → tts-chef-zh / tts-chef-en / tts-chef-ja
+  → python scripts/tts_preprocess.py (handles all pipeline steps, auto-detects language)
   → Output
 ```
 
@@ -128,6 +128,7 @@ Input text
 
 ## Agent Guidelines
 
+- **MUST invoke `scripts/tts_preprocess.py`** to perform preprocessing. The script auto-detects language and applies the correct rules. Do NOT implement the pipeline manually.
 - Default to the language the user is communicating in when uncertain
 - For proper nouns that could be either Chinese or Japanese (same kanji), prefer the context language
 - Don't over-classify — if 90% of text is one language, treat it as monolingual

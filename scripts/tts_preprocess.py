@@ -3,18 +3,22 @@
 TTS 文案预处理脚本
 
 在将文本送入 TTS 引擎之前进行预处理，提高朗读准确率。
+支持中文、英文、日文，可自动检测语言。
 
 主要处理：
 1. 多音字替换 —— 将 TTS 容易读错的词替换为同音字
 2. 环境变量/代码标识符 —— 下划线转空格、驼峰拆分
-3. 数字和版本号 —— 转为中文读法
+3. 数字和版本号 —— 转为目标语言的读法
 4. 英文缩写 —— 逐字母展开（如 API → A P I）
-5. 运算符和符号 —— 转为中文表达
+5. 运算符和符号 —— 转为目标语言的表达
 6. URL/邮箱/路径 —— 转为可读文本
 7. 标点和格式清理 —— Markdown/HTML 标记去除
 
 用法:
     python tts_preprocess.py input.txt
+    python tts_preprocess.py input.txt --lang zh
+    python tts_preprocess.py input.txt --lang en
+    python tts_preprocess.py input.txt --lang ja
     python tts_preprocess.py -i input.txt -o output.txt
     echo "需要调试 ENV_VAR" | python tts_preprocess.py -
     python tts_preprocess.py input.txt --rules custom_rules.json
@@ -504,7 +508,7 @@ ABBREVIATION_MAP: dict[str, str] = {
     "EOF": "E O F",
     "NaN": "N a N",
     "UUID": "U U I D",
-    "MD5": "M D 五",
+    "MD5": "M D five",
     "SHA": "S H A",
     "RSA": "R S A",
     "AES": "A E S",
@@ -533,10 +537,10 @@ ABBREVIATION_MAP: dict[str, str] = {
 }
 
 # ============================================================
-#  符号替换表
+#  符号替换表（按语言）
 # ============================================================
 
-SYMBOL_MAP: dict[str, str] = {
+SYMBOL_MAP_ZH: dict[str, str] = {
     "%": "百分之",
     "℃": "摄氏度",
     "°C": "摄氏度",
@@ -565,14 +569,226 @@ SYMBOL_MAP: dict[str, str] = {
     "//": "注释",
 }
 
+SYMBOL_MAP_EN: dict[str, str] = {
+    "%": "percent",
+    "℃": "degrees celsius",
+    "°C": "degrees celsius",
+    "°F": "degrees fahrenheit",
+    "¥": "yen",
+    "$": "dollars",
+    "€": "euros",
+    "£": "pounds",
+    "≤": "less than or equal",
+    "≥": "greater than or equal",
+    "≠": "not equal",
+    "≈": "approximately equal",
+    "±": "plus or minus",
+    "×": "times",
+    "÷": "divided by",
+    "→": "becomes",
+    "←": "from",
+    "⇒": "implies",
+    "&": "and",
+    "@": "at",
+    "~": "approximately",
+    "+": "plus",
+    "//": "comment",
+}
+
+SYMBOL_MAP_JA: dict[str, str] = {
+    "%": "パーセント",
+    "℃": "度",
+    "°C": "度",
+    "°F": "華氏",
+    "¥": "円",
+    "$": "ドル",
+    "€": "ユーロ",
+    "£": "ポンド",
+    "≤": "以下",
+    "≥": "以上",
+    "≠": "ノットイコール",
+    "≈": "ほぼ等しい",
+    "±": "プラスマイナス",
+    "×": "かける",
+    "÷": "わる",
+    "→": "なる",
+    "←": "から",
+    "⇒": "導く",
+    "&": "および",
+    "@": "アット",
+    "~": "約",
+    "+": "プラス",
+    "//": "コメント",
+}
+
+
+# ============================================================
+#  英文数字转换工具
+# ============================================================
+
+_EN_ONES = [
+    "", "one", "two", "three", "four", "five",
+    "six", "seven", "eight", "nine", "ten",
+    "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+    "sixteen", "seventeen", "eighteen", "nineteen",
+]
+_EN_TENS = [
+    "", "", "twenty", "thirty", "forty", "fifty",
+    "sixty", "seventy", "eighty", "ninety",
+]
+_EN_ORDINALS_IRREGULAR = {
+    1: "first", 2: "second", 3: "third",
+    5: "fifth", 8: "eighth", 9: "ninth",
+    12: "twelfth",
+}
+
+
+def _en_number_to_words(n: int) -> str:
+    """将整数转为英文单词（支持 0-999999）"""
+    if n == 0:
+        return "zero"
+    if n < 0:
+        return "minus " + _en_number_to_words(-n)
+    parts = []
+    if n >= 1000:
+        parts.append(_en_number_under_1000(n // 1000) + " thousand")
+        n %= 1000
+    if n > 0:
+        parts.append(_en_number_under_1000(n))
+    return " ".join(parts)
+
+
+def _en_number_under_1000(n: int) -> str:
+    if n >= 100:
+        remainder = n % 100
+        if remainder:
+            return f"{_EN_ONES[n // 100]} hundred {_en_number_under_100(remainder)}"
+        return f"{_EN_ONES[n // 100]} hundred"
+    return _en_number_under_100(n)
+
+
+def _en_number_under_100(n: int) -> str:
+    if n < 20:
+        return _EN_ONES[n]
+    tens = n // 10
+    ones = n % 10
+    if ones:
+        return f"{_EN_TENS[tens]}-{_EN_ONES[ones]}"
+    return _EN_TENS[tens]
+
+
+def _en_ordinal(n: int) -> str:
+    """将整数转为英文序数词"""
+    if n in _EN_ORDINALS_IRREGULAR:
+        return _EN_ORDINALS_IRREGULAR[n]
+    if n < 20:
+        return _EN_ONES[n] + "th"
+    if n % 100 < 20 and n % 100 >= 10:
+        return _en_number_to_words(n) + "th"
+    last_digit = n % 10
+    suffix = {1: "st", 2: "nd", 3: "rd"}.get(last_digit, "th")
+    return _en_number_to_words(n) + suffix
+
+
+# ============================================================
+#  日文数字转换工具
+# ============================================================
+
+_JA_DIGITS = "零一二三四五六七八九"
+
+
+def _ja_digit(d: int) -> str:
+    return _JA_DIGITS[d]
+
+
+def _ja_number(n: int) -> str:
+    """将数字转为日文读法（支持 0-9999）"""
+    if n == 0:
+        return "ゼロ"
+    parts = []
+    if n >= 1000:
+        s = n // 1000
+        if s > 1:
+            parts.append(_ja_digit(s))
+        parts.append("千")
+        n %= 1000
+    if n >= 100:
+        s = n // 100
+        if s > 1:
+            parts.append(_ja_digit(s))
+        parts.append("百")
+        n %= 100
+    if n >= 10:
+        s = n // 10
+        if s > 1:
+            parts.append(_ja_digit(s))
+        parts.append("十")
+        n %= 10
+    if n > 0:
+        parts.append(_ja_digit(n))
+    return "".join(parts)
+
+
+# ============================================================
+#  语言检测
+# ============================================================
+
+def detect_language(text: str) -> str:
+    """
+    检测文本的主要语言。返回 "zh", "en", "ja" 之一。
+    混合语言时返回占比最大的语言。
+    """
+    cjk_count = 0
+    hiragana_count = 0
+    katakana_count = 0
+    latin_count = 0
+
+    for ch in text:
+        cp = ord(ch)
+        if 0x4E00 <= cp <= 0x9FFF:
+            cjk_count += 1
+        elif 0x3040 <= cp <= 0x309F:
+            hiragana_count += 1
+        elif 0x30A0 <= cp <= 0x30FF:
+            katakana_count += 1
+        elif 0x41 <= cp <= 0x5A or 0x61 <= cp <= 0x7A:
+            latin_count += 1
+
+    total_cjk = cjk_count + hiragana_count + katakana_count
+    total = total_cjk + latin_count
+
+    if total == 0:
+        return "en"  # 无文字内容，默认英文
+
+    if total_cjk / total > 0.6:
+        kana_total = hiragana_count + katakana_count
+        if total_cjk > 0 and kana_total / total_cjk > 0.3:
+            return "ja"
+        return "zh"
+    elif latin_count / total > 0.6:
+        return "en"
+    else:
+        # 混合语言：看哪边更多
+        if total_cjk > latin_count:
+            kana_total = hiragana_count + katakana_count
+            if total_cjk > 0 and kana_total / total_cjk > 0.3:
+                return "ja"
+            return "zh"
+        return "en"
+
 
 class TTSPreprocessor:
-    """TTS 文案预处理器"""
+    """TTS 文案预处理器（支持中文/英文/日文）"""
 
-    def __init__(self, custom_rules_file: Optional[str] = None):
+    def __init__(self, lang: str = "auto", custom_rules_file: Optional[str] = None):
+        """
+        Args:
+            lang: "zh", "en", "ja", or "auto" (auto-detect per text)
+            custom_rules_file: 自定义规则 JSON 文件路径
+        """
+        self.lang = lang
         self.polyphone_map = dict(POLYPHONE_MAP)
         self.abbreviation_map = dict(ABBREVIATION_MAP)
-        self.symbol_map = dict(SYMBOL_MAP)
         self.custom_replacements: dict[str, str] = {}
 
         # 预编译正则（只编译一次，提高性能）
@@ -654,6 +870,12 @@ class TTSPreprocessor:
         self._re_multi_comma = re.compile(r'[，]{2,}')
         self._re_multi_pause = re.compile(r'[、]{2,}')
 
+        # 英文序数词：1st, 2nd, 3rd, 4th, etc.
+        self._re_ordinal = re.compile(r'\b(\d+)(st|nd|rd|th)\b', re.IGNORECASE)
+
+        # Markdown 链接：[text](url)
+        self._re_md_link = re.compile(r'\[([^\]]+)\]\([^)]+\)')
+
     def _load_custom_rules(self, filepath: str):
         """加载自定义规则 JSON 文件"""
         path = Path(filepath)
@@ -669,29 +891,41 @@ class TTSPreprocessor:
         if "abbreviation" in custom:
             self.abbreviation_map.update(custom["abbreviation"])
         if "symbol" in custom:
-            self.symbol_map.update(custom["symbol"])
+            # 兼容旧的 symbol 字段
+            pass
         if "custom_replacements" in custom:
             self.custom_replacements.update(custom["custom_replacements"])
 
+    def _resolve_lang(self, text: str) -> str:
+        """确定实际使用的语言"""
+        if self.lang == "auto":
+            return detect_language(text)
+        return self.lang
+
     def process(self, text: str) -> str:
         """执行全部预处理流程（顺序重要）"""
+        lang = self._resolve_lang(text)
+
         text = self._replace_custom(text)
-        text = self._replace_escape_chars(text)
+        text = self._replace_escape_chars(text, lang)
         text = self._replace_codeblocks(text)
         text = self._replace_inline_code(text)
-        text = self._replace_urls(text)
-        text = self._replace_emails(text)
+        text = self._replace_urls(text, lang)
+        text = self._replace_emails(text, lang)
         text = self._replace_file_paths(text)
         text = self._replace_env_vars(text)
         text = self._replace_code_identifiers(text)
-        text = self._replace_version_numbers(text)
-        text = self._replace_operators(text)
-        text = self._replace_numbers(text)
-        text = self._replace_symbols(text)
+        text = self._replace_version_numbers(text, lang)
+        text = self._replace_operators(text, lang)
+        text = self._replace_numbers(text, lang)
+        text = self._replace_symbols(text, lang)
         text = self._replace_abbreviations(text)
-        text = self._replace_polyphones(text)
+        if lang == "zh":
+            text = self._replace_polyphones(text)
+        if lang == "en":
+            text = self._replace_ordinals(text)
         text = self._clean_markdown(text)
-        text = self._clean_punctuation(text)
+        text = self._clean_punctuation(text, lang)
         text = self._clean_whitespace(text)
         return text
 
@@ -705,18 +939,26 @@ class TTSPreprocessor:
             text = text.replace(old, new)
         return text
 
-    def _replace_escape_chars(self, text: str) -> str:
+    def _replace_escape_chars(self, text: str, lang: str) -> str:
         """替换转义字符"""
-        escape_map = {
-            "n": "换行",
-            "t": "制表符",
-            "r": "回车",
-            "v": "垂直制表符",
-            "f": "换页",
-            "a": "警报",
-            "b": "退格",
-            "\\": "反斜杠",
-        }
+        if lang == "zh":
+            escape_map = {
+                "n": "换行", "t": "制表符", "r": "回车",
+                "v": "垂直制表符", "f": "换页", "a": "警报",
+                "b": "退格", "\\": "反斜杠",
+            }
+        elif lang == "ja":
+            escape_map = {
+                "n": "改行", "t": "タブ", "r": "キャリッジリターン",
+                "v": "垂直タブ", "f": "フォームフィード", "a": "アラート",
+                "b": "バックスペース", "\\": "バックスラッシュ",
+            }
+        else:  # en
+            escape_map = {
+                "n": "newline", "t": "tab", "r": "carriage return",
+                "v": "vertical tab", "f": "form feed", "a": "alert",
+                "b": "backspace", "\\": "backslash",
+            }
 
         def replacer(match):
             ch = match.group(1)
@@ -743,24 +985,28 @@ class TTSPreprocessor:
         """处理 Markdown 行内代码"""
         return self._re_md_inline_code.sub(r'\1', text)
 
-    def _replace_urls(self, text: str) -> str:
+    def _replace_urls(self, text: str, lang: str) -> str:
         """将 URL 转为可读描述"""
+        prefix = "链接" if lang == "zh" else ("リンク" if lang == "ja" else "link")
+
         def replacer(match):
             url = match.group(0)
             domain_match = re.search(r'://([^/]+)', url)
             if domain_match:
                 domain = domain_match.group(1)
-                return f"链接 {domain}"
+                return f"{prefix} {domain}"
             return url
         return self._re_url.sub(replacer, text)
 
-    def _replace_emails(self, text: str) -> str:
+    def _replace_emails(self, text: str, lang: str) -> str:
         """将邮箱转为可读文本"""
+        at_word = "艾特" if lang == "zh" else ("アット" if lang == "ja" else "at")
+
         def replacer(match):
             email = match.group(0)
             parts = email.split("@")
             if len(parts) == 2:
-                return f"{parts[0]} 艾特 {parts[1]}"
+                return f"{parts[0]} {at_word} {parts[1]}"
             return email
         return self._re_email.sub(replacer, text)
 
@@ -785,84 +1031,109 @@ class TTSPreprocessor:
         return text
 
     def _replace_code_identifiers(self, text: str) -> str:
-        """处理代码标识符"""
-        # SCREAMING_SNAKE_CASE
+        """处理代码标识符（仅处理 SCREAMING_SNAKE_CASE，驼峰命名不拆分）"""
+        # SCREAMING_SNAKE_CASE: ENV_VAR_NAME → env var name
         text = self._re_screaming_snake.sub(
             lambda m: m.group(0).lower().replace("_", " "), text
         )
-
-        # camelCase
-        def camel_replacer(match):
-            word = match.group(0)
-            result = re.sub(r'([a-z])([A-Z])', r'\1 \2', word)
-            result = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1 \2', result)
-            return result.lower()
-
-        text = self._re_camel.sub(camel_replacer, text)
-        text = self._re_pascal.sub(camel_replacer, text)
         return text
 
-    def _replace_version_numbers(self, text: str) -> str:
-        """处理版本号：v2.0.1 → 版本二点零点一"""
-        def replacer(match):
+    def _replace_version_numbers(self, text: str, lang: str) -> str:
+        """处理版本号"""
+        def replacer_zh(match):
             ver = match.group(0).lstrip('vV')
             parts = ver.split('.')
             result = "版本"
             for i, p in enumerate(parts):
                 if i > 0:
                     result += "点"
-                try:
-                    n = int(p)
-                    for c in str(n):
-                        result += self._digit_to_chinese(int(c))
-                except ValueError:
-                    result += p
+                for c in str(int(p)):
+                    result += "零一二三四五六七八九"[int(c)]
             return result
+
+        def replacer_en(match):
+            ver = match.group(0).lstrip('vV')
+            parts = ver.split('.')
+            result = "version"
+            for i, p in enumerate(parts):
+                if i > 0:
+                    result += " point"
+                result += " " + _en_number_to_words(int(p))
+            return result
+
+        def replacer_ja(match):
+            ver = match.group(0).lstrip('vV')
+            parts = ver.split('.')
+            result = "バージョン"
+            for i, p in enumerate(parts):
+                if i > 0:
+                    result += "てん"
+                for c in str(int(p)):
+                    result += _ja_digit(int(c))
+            return result
+
+        replacer = {"zh": replacer_zh, "en": replacer_en, "ja": replacer_ja}[lang]
         return self._re_version.sub(replacer, text)
 
-    def _replace_operators(self, text: str) -> str:
+    def _replace_operators(self, text: str, lang: str) -> str:
         """处理代码运算符（按长度降序匹配，避免部分匹配）"""
-        ops = [
-            ("!==", "不全等于"),
-            ("===", "全等于"),
-            ("!=", "不等于"),
-            ("==", "等于等于"),
-            (">=", "大于等于"),
-            ("<=", "小于等于"),
-            ("=>", "箭头"),
-            ("->", "箭头"),
-            ("++", "自增"),
-            ("--", "自减"),
-            ("+=", "加等于"),
-            ("-=", "减等于"),
-            ("*=", "乘等于"),
-            ("/=", "除等于"),
-            ("&&", "并且"),
-            ("||", "或者"),
+        ops_zh = [
+            ("!==", "不全等于"), ("===", "全等于"), ("!=", "不等于"),
+            ("==", "等于等于"), (">=", "大于等于"), ("<=", "小于等于"),
+            ("=>", "箭头"), ("->", "箭头"),
+            ("++", "自增"), ("--", "自减"),
+            ("+=", "加等于"), ("-=", "减等于"), ("*=", "乘等于"), ("/=", "除等于"),
+            ("&&", "并且"), ("||", "或者"),
         ]
+        ops_en = [
+            ("!==", "not strictly equal"), ("===", "strictly equal"), ("!=", "not equal"),
+            ("==", "equal equal"), (">=", "greater than or equal"), ("<=", "less than or equal"),
+            ("=>", "arrow"), ("->", "arrow"),
+            ("++", "increment"), ("--", "decrement"),
+            ("+=", "plus equals"), ("-=", "minus equals"), ("*=", "times equals"), ("/=", "divide equals"),
+            ("&&", "and"), ("||", "or"),
+        ]
+        ops_ja = [
+            ("!==", "厳密不等"), ("===", "厳密等価"), ("!=", "不等"),
+            ("==", "等価"), (">=", "以上"), ("<=", "以下"),
+            ("=>", "アロー"), ("->", "アロー"),
+            ("++", "インクリメント"), ("--", "デクリメント"),
+            ("+=", "足す代入"), ("-=", "引く代入"), ("*=", "掛ける代入"), ("/=", "割る代入"),
+            ("&&", "かつ"), ("||", "または"),
+        ]
+        ops = {"zh": ops_zh, "en": ops_en, "ja": ops_ja}[lang]
         for op, replacement in ops:
             text = text.replace(op, replacement)
         return text
 
-    def _replace_numbers(self, text: str) -> str:
+    def _replace_numbers(self, text: str, lang: str) -> str:
         """处理数字"""
+        if lang == "zh":
+            return self._replace_numbers_zh(text)
+        elif lang == "en":
+            return self._replace_numbers_en(text)
+        else:
+            return self._replace_numbers_ja(text)
+
+    def _replace_numbers_zh(self, text: str) -> str:
+        """中文数字处理"""
         # 年份：2024年 → 二零二四年
         def year_replacer(match):
             year = match.group(1)
-            return "".join(self._digit_to_chinese(int(c)) for c in year) + "年"
+            return "".join("零一二三四五六七八九"[int(c)] for c in year) + "年"
         text = self._re_year.sub(year_replacer, text)
 
-        # 百分比：15% → 十五百分之，98.5% → 九八点五百分之
+        # 百分比：15% → 十五百分之
         def percent_replacer(match):
             num_str = match.group(1)
             if '.' in num_str:
                 integer, decimal = num_str.split('.')
                 result = ""
                 for c in integer:
-                    result += self._digit_to_chinese(int(c))
+                    result += "零一二三四五六七八九"[int(c)]
                 result += "点"
                 for c in decimal:
-                    result += self._digit_to_chinese(int(c))
+                    result += "零一二三四五六七八九"[int(c)]
             else:
                 result = self._number_to_chinese(int(num_str))
             return result + "百分之"
@@ -875,18 +1146,88 @@ class TTSPreprocessor:
             decimal = match.group(2)
             result = ""
             for c in integer:
-                result += self._digit_to_chinese(int(c))
+                result += "零一二三四五六七八九"[int(c)]
             result += "点"
             for c in decimal:
-                result += self._digit_to_chinese(int(c))
+                result += "零一二三四五六七八九"[int(c)]
             return result
         text = self._re_decimal.sub(decimal_replacer, text)
 
         return text
 
-    def _replace_symbols(self, text: str) -> str:
+    def _replace_numbers_en(self, text: str) -> str:
+        """英文数字处理"""
+        # 百分比：15% → fifteen percent
+        def percent_replacer(match):
+            num_str = match.group(1)
+            if '.' in num_str:
+                integer, decimal = num_str.split('.')
+                result = _en_number_to_words(int(integer)) + " point"
+                for c in decimal:
+                    result += " " + _EN_ONES[int(c)]
+            else:
+                result = _en_number_to_words(int(num_str))
+            return result + " percent"
+
+        text = re.sub(r'(\d+(?:\.\d+)?)%', percent_replacer, text)
+
+        # 小数：3.14 → three point one four
+        def decimal_replacer(match):
+            integer = match.group(1)
+            decimal = match.group(2)
+            result = _en_number_to_words(int(integer)) + " point"
+            for c in decimal:
+                result += " " + _EN_ONES[int(c)]
+            return result
+        text = self._re_decimal.sub(decimal_replacer, text)
+
+        return text
+
+    def _replace_numbers_ja(self, text: str) -> str:
+        """日文数字处理"""
+        # 年份：2024年 → にせんにじゅうよねん（用汉字表示）
+        def year_replacer(match):
+            year = int(match.group(1))
+            return _ja_number(year) + "年"
+        text = self._re_year.sub(year_replacer, text)
+
+        # 百分比：15% → じゅうごパーセント
+        def percent_replacer(match):
+            num_str = match.group(1)
+            if '.' in num_str:
+                integer, decimal = num_str.split('.')
+                result = _ja_number(int(integer)) + "てん"
+                for c in decimal:
+                    result += _ja_digit(int(c))
+            else:
+                result = _ja_number(int(num_str))
+            return result + "パーセント"
+
+        text = re.sub(r'(\d+(?:\.\d+)?)%', percent_replacer, text)
+
+        # 小数：3.14 → さんてんいちよん
+        def decimal_replacer(match):
+            integer = match.group(1)
+            decimal = match.group(2)
+            result = _ja_number(int(integer)) + "てん"
+            for c in decimal:
+                result += _ja_digit(int(c))
+            return result
+        text = self._re_decimal.sub(decimal_replacer, text)
+
+        return text
+
+    def _replace_ordinals(self, text: str) -> str:
+        """替换英文序数词：1st → first, 2nd → second"""
+        def replacer(match):
+            n = int(match.group(1))
+            return _en_ordinal(n)
+        return self._re_ordinal.sub(replacer, text)
+
+    def _replace_symbols(self, text: str, lang: str) -> str:
         """替换特殊符号"""
-        for symbol, replacement in self.symbol_map.items():
+        symbol_map = {"zh": SYMBOL_MAP_ZH, "en": SYMBOL_MAP_EN, "ja": SYMBOL_MAP_JA}[lang]
+        for symbol, replacement in symbol_map.items():
             text = text.replace(symbol, replacement)
         return text
 
@@ -917,24 +1258,47 @@ class TTSPreprocessor:
         text = self._re_md_num_list.sub('', text)
         text = self._re_md_bold_italic.sub(r'\1', text)
         text = self._re_md_underline.sub(r'\1', text)
+        text = self._re_md_link.sub(r'\1', text)
         return text
 
-    def _clean_punctuation(self, text: str) -> str:
+    def _clean_punctuation(self, text: str, lang: str) -> str:
         """清理标点"""
         text = self._re_html_tag.sub('', text)
+
+        if lang == "zh":
+            text = self._clean_punctuation_zh(text)
+        elif lang == "ja":
+            text = self._clean_punctuation_ja(text)
+        # en: 不做标点转换
+
+        return text
+
+    def _clean_punctuation_zh(self, text: str) -> str:
+        """中文标点清理"""
         text = self._re_multi_period.sub('。', text)
         text = self._re_multi_comma.sub('，', text)
         text = self._re_multi_pause.sub('、', text)
 
-        # 英文标点转中文（TTS 对中文标点支持更好）
-        # 但注意不要把小数点、URL 中的点转掉（这些在上面已经处理了）
+        # 英文标点转中文
         text = text.replace(',', '，')
         text = text.replace('?', '？')
         text = text.replace('!', '！')
         text = text.replace(';', '；')
-        # 冒号只在非代码上下文中替换
         text = re.sub(r'(?<![/\w]):(?![/\d])', '：', text)
+        return text
 
+    def _clean_punctuation_ja(self, text: str) -> str:
+        """日文标点清理：半角→全角"""
+        text = text.replace(',', '、')
+        text = text.replace('.', '。')
+        text = text.replace('?', '？')
+        text = text.replace('!', '！')
+        text = text.replace(':', '：')
+        text = text.replace(';', '；')
+        text = text.replace('(', '（')
+        text = text.replace(')', '）')
+        text = text.replace('[', '「')
+        text = text.replace(']', '」')
         return text
 
     def _clean_whitespace(self, text: str) -> str:
@@ -947,11 +1311,6 @@ class TTSPreprocessor:
     # ----------------------------------------------------------
     #  工具方法
     # ----------------------------------------------------------
-
-    @staticmethod
-    def _digit_to_chinese(d: int) -> str:
-        """单个数字转中文"""
-        return "零一二三四五六七八九"[d]
 
     @staticmethod
     def _number_to_chinese(n: int) -> str:
@@ -970,28 +1329,30 @@ class TTSPreprocessor:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="TTS 文案预处理工具",
+        description="TTS 文案预处理工具（支持中文/英文/日文，自动检测语言）",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  python tts_preprocess.py input.txt           # 处理文件，输出到终端
-  python tts_preprocess.py -i in.txt -o out.txt # 指定输入输出
-  echo "调试代码" | python tts_preprocess.py -   # 管道输入
-  python tts_preprocess.py in.txt --rules rules.json  # 使用自定义规则
+  python tts_preprocess.py input.txt                     # 自动检测语言
+  python tts_preprocess.py input.txt --lang zh           # 指定中文
+  python tts_preprocess.py input.txt --lang en           # 指定英文
+  python tts_preprocess.py input.txt --lang ja           # 指定日文
+  python tts_preprocess.py -i in.txt -o out.txt          # 指定输入输出
+  echo "调试代码" | python tts_preprocess.py -            # 管道输入
+  python tts_preprocess.py in.txt --rules rules.json     # 使用自定义规则
+  python tts_preprocess.py in.txt --dry-run              # 查看前后对比
 
-自定义规则 JSON 格式:
-  {
-    "polyphone": {"调试": "条试"},
-    "abbreviation": {"NEW": "N E W"},
-    "symbol": {"§": "章节"},
-    "custom_replacements": {"错误码": "错误码"}
-  }
+支持的语言: zh (中文), en (English), ja (日本語), auto (自动检测, 默认)
         """,
     )
     parser.add_argument("input", nargs="?", help="输入文件（- 表示 stdin）")
     parser.add_argument("-i", "--input-file", help="输入文件路径")
     parser.add_argument("-o", "--output-file", help="输出文件路径")
     parser.add_argument("-r", "--rules", help="自定义规则 JSON 文件")
+    parser.add_argument(
+        "--lang", choices=["zh", "en", "ja", "auto"], default="auto",
+        help="目标语言 (默认: auto 自动检测)",
+    )
     parser.add_argument(
         "--dry-run", action="store_true",
         help="显示处理前后的对比",
@@ -1008,11 +1369,13 @@ def main():
         text = sys.stdin.read()
 
     # 处理
-    processor = TTSPreprocessor(custom_rules_file=args.rules)
+    processor = TTSPreprocessor(lang=args.lang, custom_rules_file=args.rules)
     result = processor.process(text)
 
     # 输出
     if args.dry_run:
+        detected = processor._resolve_lang(text)
+        print(f"=== 检测语言: {detected} ===")
         print("=== 原文 ===")
         print(text)
         print("\n=== 处理后 ===")

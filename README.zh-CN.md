@@ -99,11 +99,16 @@ npx skills add https://github.com/clear2x/tts-chef --agent cursor
 
 ## 独立脚本
 
-不依赖 AI 代理，可直接使用：
+**AI 代理必须使用此脚本进行所有 TTS 预处理**，不得手动实现预处理流程。脚本自动检测语言（中文、英文、日文）并应用对应规则。
 
 ```bash
-# 处理文件
+# 处理文件（自动检测语言）
 python scripts/tts_preprocess.py input.txt
+
+# 指定语言
+python scripts/tts_preprocess.py input.txt --lang zh
+python scripts/tts_preprocess.py input.txt --lang en
+python scripts/tts_preprocess.py input.txt --lang ja
 
 # 管道输入
 echo "调试代码" | python scripts/tts_preprocess.py -

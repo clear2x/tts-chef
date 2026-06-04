@@ -99,11 +99,16 @@ After (Chinese):
 
 ## Standalone Script
 
-For use outside of AI agents:
+**Agents MUST use this script for all TTS preprocessing** — do not implement the pipeline manually. The script auto-detects language (Chinese, English, Japanese) and applies the correct rules.
 
 ```bash
-# Process a file
+# Process a file (auto-detect language)
 python scripts/tts_preprocess.py input.txt
+
+# Specify language explicitly
+python scripts/tts_preprocess.py input.txt --lang zh
+python scripts/tts_preprocess.py input.txt --lang en
+python scripts/tts_preprocess.py input.txt --lang ja
 
 # Pipe input
 echo "调试代码" | python scripts/tts_preprocess.py -
