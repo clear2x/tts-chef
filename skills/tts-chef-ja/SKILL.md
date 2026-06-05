@@ -171,7 +171,7 @@ Break on: `。` `！` `？` followed by content.
 
 ## Agent Guidelines
 
-- **MUST invoke `scripts/tts_preprocess.py`** to perform preprocessing. Do NOT apply these rules manually — the script implements them all.
+- **MUST invoke `tts_preprocess.py`** (from tts-chef-core skill directory) to perform preprocessing. Do NOT apply these rules manually — the script implements them all.
 - Run **tts-chef-core** pipeline first, then apply this skill
 - Kanji correction is context-dependent — don't blindly replace all instances
 - For katakana loan words, most TTS engines handle them correctly

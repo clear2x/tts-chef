@@ -194,7 +194,7 @@ Remove Markdown formatting markers (after all content processing is done).
 - **Skip steps that don't apply.** If the text has no code, skip Steps 3-4, 8-9. If no URLs, skip Step 5.
 - **For mixed-language text**, detect the primary language and apply the corresponding language skill (tts-chef-zh, tts-chef-en, or tts-chef-ja).
 - **The pipeline is idempotent** for already-clean text — safe to re-run.
-- **MUST use `scripts/tts_preprocess.py`** for all preprocessing. Do NOT implement the pipeline steps manually. Invoke: `python scripts/tts_preprocess.py input.txt`
+- **MUST use `tts_preprocess.py`** (in this skill directory) for all preprocessing. Do NOT implement the pipeline steps manually. Invoke: `python tts_preprocess.py input.txt`
 
 ## Do Not
 

@@ -103,21 +103,21 @@ npx skills add https://github.com/clear2x/tts-chef --agent cursor
 
 ```bash
 # 处理文件（自动检测语言）
-python scripts/tts_preprocess.py input.txt
+python skills/tts-chef-core/tts_preprocess.py input.txt
 
 # 指定语言
-python scripts/tts_preprocess.py input.txt --lang zh
-python scripts/tts_preprocess.py input.txt --lang en
-python scripts/tts_preprocess.py input.txt --lang ja
+python skills/tts-chef-core/tts_preprocess.py input.txt --lang zh
+python skills/tts-chef-core/tts_preprocess.py input.txt --lang en
+python skills/tts-chef-core/tts_preprocess.py input.txt --lang ja
 
 # 管道输入
-echo "调试代码" | python scripts/tts_preprocess.py -
+echo "调试代码" | python skills/tts-chef-core/tts_preprocess.py -
 
 # 查看前后对比
-python scripts/tts_preprocess.py input.txt --dry-run
+python skills/tts-chef-core/tts_preprocess.py input.txt --dry-run
 
 # 自定义规则
-python scripts/tts_preprocess.py input.txt --rules custom_rules.json
+python skills/tts-chef-core/tts_preprocess.py input.txt --rules custom_rules.json
 ```
 
 ## 项目结构
@@ -135,11 +135,12 @@ tts-chef/
   assets/
     tts-chef-logo.svg
     tts-chef-icon.svg
-  scripts/
-    tts_preprocess.py      # 独立 Python 工具
+  scripts/                   # (空，脚本已移至 tts-chef-core)
   skills/
     llms.txt               # 技能索引（代理发现用）
-    tts-chef-core/         SKILL.md
+    tts-chef-core/
+      SKILL.md
+      tts_preprocess.py    # 必用的预处理脚本
     tts-chef-zh/           SKILL.md
     tts-chef-en/           SKILL.md
     tts-chef-ja/           SKILL.md

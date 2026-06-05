@@ -6,7 +6,7 @@ This repository contains **tts-chef** skills for AI coding agents — TTS text p
 
 - **skills/** — Each subdirectory is one skill. The CLI and agents discover skills by scanning `skills/` for directories that contain `SKILL.md`.
 - **Skill directory name** must exactly match the `name` in that skill's frontmatter (e.g. `skills/tts-chef-core/` ↔ `name: tts-chef-core`).
-- **scripts/tts_preprocess.py** — **Mandatory.** Agents MUST use this script for all TTS text preprocessing. Do NOT implement the preprocessing pipeline manually — invoke `python scripts/tts_preprocess.py` instead.
+- **skills/tts-chef-core/tts_preprocess.py** — **Mandatory.** Agents MUST use this script for all TTS text preprocessing. Do NOT implement the preprocessing pipeline manually — invoke `python tts_preprocess.py` inside the skill directory instead.
 
 ## SKILL.md requirements
 

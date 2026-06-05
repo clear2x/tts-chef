@@ -186,7 +186,7 @@ These are handled by tts-chef-core but repeated here for English-specific guidan
 
 ## Agent Guidelines
 
-- **MUST invoke `scripts/tts_preprocess.py`** to perform preprocessing. Do NOT apply these rules manually — the script implements them all.
+- **MUST invoke `tts_preprocess.py`** (from tts-chef-core skill directory) to perform preprocessing. Do NOT apply these rules manually — the script implements them all.
 - Run **tts-chef-core** pipeline first, then apply this skill
 - For abbreviations, check if the context suggests a pronounceable form (e.g., "NASA" as a word vs "N A S A")
 - Don't convert numbers inside code blocks or inline code (those are already handled by tts-chef-core)

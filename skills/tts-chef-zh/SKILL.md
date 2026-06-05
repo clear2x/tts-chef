@@ -437,11 +437,11 @@ Expand English tech abbreviations by spelling out each letter with spaces. Match
 | OAuth | O Auth |
 | SaaS | S a a S |
 
-Full list contains ~100 abbreviations. See `scripts/tts_preprocess.py` for the complete `ABBREVIATION_MAP`.
+Full list contains ~100 abbreviations. See `tts_preprocess.py` (in tts-chef-core skill directory) for the complete `ABBREVIATION_MAP`.
 
 ## Agent Guidelines
 
-- **MUST invoke `scripts/tts_preprocess.py`** to perform preprocessing. Do NOT apply these rules manually — the script implements them all.
+- **MUST invoke `tts_preprocess.py`** (from tts-chef-core skill directory) to perform preprocessing. Do NOT apply these rules manually — the script implements them all.
 - Run **tts-chef-core** pipeline first, then apply this skill
 - Apply polyphone replacement **after** all other text transformations
 - For mixed Chinese/English text, apply Chinese rules to Chinese segments only

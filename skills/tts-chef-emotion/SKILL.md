@@ -84,7 +84,7 @@ The `[/]` tag resets to the default (neutral) voice.
 
 ### Preprocessing Prerequisite
 
-- **MUST run `python scripts/tts_preprocess.py`** on the text BEFORE adding emotion tags. Emotion annotation applies to already-preprocessed text.
+- **MUST run `python tts_preprocess.py`** (from tts-chef-core skill directory) on the text BEFORE adding emotion tags. Emotion annotation applies to already-preprocessed text.
 
 ### When to Add Emotion Tags
 
